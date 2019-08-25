@@ -1,7 +1,6 @@
 
 package cshu271.tictactoe;
 
-import com.google.gson.Gson;
 import cshu271.tictactoe.Game.Player;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +18,6 @@ import javax.ws.rs.core.Response.Status;
 public class TicTacToeResource
 {
 
-	private Gson gson = new Gson();
 	private static final Map<Integer, Game> pendingGames = new HashMap();
 	private static final Map<Integer, Game> startedGames = new HashMap();
 	private static final Map<Integer, Game> finishedGames = new HashMap();
@@ -37,7 +35,7 @@ public class TicTacToeResource
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response getNewUserId()
 	{
-		return Response.status(Status.OK).entity(gson.toJson(nextUserId++)).build();
+		return JsonResponseBuilder.build(nextUserId++);
 	}
 
 	/**
@@ -71,7 +69,7 @@ public class TicTacToeResource
 				startedGames.put(game.getGameId(), game);
 			}
 		}
-		return Response.status(Status.OK).entity(gson.toJson(game)).build();
+		return JsonResponseBuilder.build(game);
 	}
 
 	/**
@@ -88,17 +86,17 @@ public class TicTacToeResource
 	{
 		if (startedGames.containsKey(gameId))
 		{
-			return Response.status(Status.OK).entity(gson.toJson(startedGames.get(gameId))).build();
+			return JsonResponseBuilder.build(startedGames.get(gameId));
 		}
 		if (pendingGames.containsKey(gameId))
 		{
-			return Response.status(Status.OK).entity(gson.toJson(pendingGames.get(gameId))).build();
+			return JsonResponseBuilder.build(pendingGames.get(gameId));
 		}
 		if (finishedGames.containsKey(gameId))
 		{
-			return Response.status(Status.OK).entity(gson.toJson(finishedGames.get(gameId))).build();
+			return JsonResponseBuilder.build(finishedGames.get(gameId));
 		}
-		return Response.status(Status.NOT_FOUND).build();
+		return ErrorResponseBuilder.build(Status.NOT_FOUND);
 	}
 
 	/**
@@ -122,14 +120,14 @@ public class TicTacToeResource
 	{
 		if (row == null || row < 0 || row > 2 || column == null || column < 0 || column > 2)
 		{
-			return Response.status(Status.BAD_REQUEST).build();
+			return ErrorResponseBuilder.build(Status.BAD_REQUEST);
 		}
 		
 		synchronized (startedGames)
 		{
 			if (!startedGames.containsKey(gameId))
 			{
-				return Response.status(Status.NOT_FOUND).build();
+				return ErrorResponseBuilder.build(Status.NOT_FOUND);
 			}
 			
 			Game game = startedGames.get(gameId);
@@ -141,11 +139,11 @@ public class TicTacToeResource
 					finishedGames.put(game.getGameId(), game);
 					startedGames.remove(game.getGameId());
 				}
-				return Response.status(Status.OK).entity(gson.toJson(game)).build();
+				return JsonResponseBuilder.build(game);
 			}
 			catch(IllegalArgumentException iae)
 			{
-				return Response.status(Status.BAD_REQUEST).build();
+				return ErrorResponseBuilder.build(Status.BAD_REQUEST);
 			}
 		}
 	}
